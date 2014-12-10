@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>mdtable demo</title>
+  <link href="http://cdn.staticfile.org/twitter-bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="http://cdn.staticfile.org/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="css/plugins.css" rel="stylesheet">
+</head>
+<body>
+<div class="container" style="margin-top: 50px;">
+  <div class="filter row" style="margin-bottom: 20px;">
+    <div class="col-lg-3">
+      <input class="form-control" type="search" placeholder="搜索search"/>
+    </div>
+    <div class="col-lg-3 pull-right">
+      <select class="form-control">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </div>
+  </div>
+  <table class="table table-bordered table-hover">
+    <thead>
+    <th width="120">姓名</th>
+    <th width="120">身高</th>
+    <th width="200">体重</th>
+    <th>年龄</th>
+    </thead>
+  </table>
+  <div class="data row">
+    <div class="col-lg-9">
+      <textarea class="form-control" style="height: 200px;resize: none;"></textarea>
+    </div>
+    <div class="col-lg-3">
+      <button class="btn btn-success" style="width: 100%;margin-top: 85px;">改变数据</button>
+    </div>
+  </div>
+</div>
+<script src="http://cdn.staticfile.org/jquery/1.9.1/jquery.js"></script>
+<script src="js/plugins.js"></script>
+<script>
+$(function(){
+  var $select = $('.filter select'),
+    $search = $('.filter input'),
+    $data = $('.data textarea'),
+    $btn = $('.data .btn');
+  $t = $('table').mdtable({
+    url: 'data/data.json',
+    extra: {id: $select.val()},
+    multicheck: {enable: true},
+    columns: [
+      {
+        class:"name text-center",
+        row:'name'
+      }, {
+        class:"height",
+        row:'height',
+        renderer: function(value) {
+          return value + 'cm';
+        },
+        sort: {
+          enable: true
+        }
+      }, {
+        class:"weight",
+        row:'weight',
+        renderer: function(value) {
+          var r = $('<div>' + value + '</div>');
+          r.hover(function(){
+            r.text(r.text()+'kg').css('color','#f90');
+          }, function(){
+            r.text(r.text().substring(0, r.text().length -2)).css('color','#000');
+          });
+          return r;
+        },
+        sort: {
+          enable: true,
+          default: 'asc',
+          rule: function(a, b) {
+            return a.text() > b.text();
+          }
+        }
+      }, {
+        class:"age",
+        row:'age'
+      }
+    ],
+      trRenderer: function(row) {
+      console.log(row);
+    }
+  }).on('select.change', function(event, indexs){
+    console.log(indexs);
+  });
+
+
+  $search.on('keypress', function(event){
+    if (event.keyCode === 13) {
+      $t.load({search: $search.val(), id: $select.val()});
+    }
+  });
+  $select.on('change', function() {
+    $t.load({search: $search.val(), id: $select.val()});
+  });
+
+  var _data = {
+    "count": 3,
+    "data": [
+      {
+        "name": "Lily",
+        "height": 170,
+        "weight": 57,
+        "age": 30
+      }, {
+        "name": "Tom",
+        "height": 180,
+        "weight": 58,
+        "age": 27
+      }, {
+        "name": "Jerry",
+        "height": 150,
+        "weight": 50,
+        "age": 15
+      }
+    ]
+  }
+  $data.val(JSON.stringify(_data));
+  $btn.on('click', function(){
+    $t.loadData(JSON.parse($data.val()));
+  });
+});
+</script>
+</body>
+</html>
