@@ -1,65 +1,148 @@
-<!doctype html>
-<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
-<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
+<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
-  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen">
-  <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script type="text/javascript" src="javascripts/script.js"></script>
-
-  <title>mdtable</title>
-  <meta name="description" content="primary table in our site">
-
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>mdtable demo</title>
+  <link href="http://cdn.staticfile.org/twitter-bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="http://cdn.staticfile.org/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="css/plugins.css" rel="stylesheet">
 </head>
-
 <body>
-
-  <div class="wrapper">
-    <header>
-      <h1 class="title">mdtable</h1>
-    </header>
-    <div id="container">
-      <p class="tagline">primary table in our site</p>
-      <div id="main" role="main">
-        <div class="download-bar">
-        <div class="inner">
-          <a href="https://github.com/nccun/mdtable/tarball/master" class="download-button tar"><span>Download</span></a>
-          <a href="https://github.com/nccun/mdtable/zipball/master" class="download-button zip"><span>Download</span></a>
-          <a href="https://github.com/nccun/mdtable" class="code">View mdtable on GitHub</a>
-        </div>
-        <span class="blc"></span><span class="trc"></span>
-        </div>
-        <article class="markdown-body">
-          <h1>
-<a id="mdtable" class="anchor" href="#mdtable" aria-hidden="true"><span class="octicon octicon-link"></span></a>mdtable</h1>
-
-<p>primary table in our site</p>
-        </article>
-      </div>
+<div class="container" style="margin-top: 50px;">
+  <div class="filter row" style="margin-bottom: 20px;">
+    <div class="col-lg-3">
+      <input class="form-control" type="search" placeholder="搜索search"/>
     </div>
-    <footer>
-      <div class="owner">
-      <p><a href="https://github.com/nccun" class="avatar"><img src="https://avatars3.githubusercontent.com/u/9427965?v=3&amp;s=60" width="48" height="48"></a> <a href="https://github.com/nccun">nccun</a> maintains <a href="https://github.com/nccun/mdtable">mdtable</a></p>
-
-
-      </div>
-      <div class="creds">
-        <small>This page generated using <a href="http://pages.github.com/">GitHub Pages</a><br>theme by <a href="https://twitter.com/jonrohan/">Jon Rohan</a></small>
-      </div>
-    </footer>
+    <div class="col-lg-3 pull-right">
+      <select class="form-control">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </div>
   </div>
-  <div class="current-section">
-    <a href="#top">Scroll to top</a>
-    <a href="https://github.com/nccun/mdtable/tarball/master" class="tar">tar</a><a href="https://github.com/nccun/mdtable/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
-    <p class="name"></p>
+  <table class="table table-bordered table-hover">
+    <thead>
+    <th width="120">姓名</th>
+    <th width="120">身高</th>
+    <th width="200">体重</th>
+    <th>年龄</th>
+    </thead>
+  </table>
+  <div class="data row">
+    <div class="col-lg-9">
+      <textarea class="form-control" style="height: 200px;resize: none;"></textarea>
+    </div>
+    <div class="col-lg-3">
+      <button class="btn btn-success" style="width: 100%;margin-top: 85px;">改变数据</button>
+    </div>
   </div>
+  <div class="data1 row">
+    <div class="col-lg-9">
+      <textarea class="form-control" style="height: 200px;resize: none;"></textarea>
+    </div>
+    <div class="col-lg-3">
+      <button class="btn btn-success" style="width: 100%;margin-top: 85px;">添加数据</button>
+    </div>
+  </div>
+</div>
+<script src="http://cdn.staticfile.org/jquery/1.9.1/jquery.js"></script>
+<script src="js/plugins.js"></script>
+<script>
+$(function(){
+  var $select = $('.filter select'),
+    $search = $('.filter input'),
+    $data = $('.data textarea'),
+    $btn = $('.data .btn'),
+    $data1 = $('.data1 textarea'),
+    $btn1 = $('.data1 .btn');
+  $t = $('table').mdtable({
+    url: 'data/data.json',
+    extra: {id: $select.val()},
+    multicheck: {enable: true},
+    columns: [
+      {
+        class:"name text-center",
+        row:'name'
+      }, {
+        class:"height",
+        row:'height',
+        renderer: function(value) {
+          return value + 'cm';
+        },
+        sort: {
+          enable: true
+        }
+      }, {
+        class:"weight",
+        row:'weight',
+        renderer: function(value) {
+          var r = $('<div>' + value + '</div>');
+          r.hover(function(){
+            r.text(r.text()+'kg').css('color','#f90');
+          }, function(){
+            r.text(r.text().substring(0, r.text().length -2)).css('color','#000');
+          });
+          return r;
+        },
+        sort: {
+          enable: true,
+          default: 'asc',
+          rule: function(a, b) {
+            return a.text() > b.text();
+          }
+        }
+      }, {
+        class:"age",
+        row:'age'
+      }
+    ],
+      trRenderer: function(row) {
+      console.log(row);
+    }
+  }).on('select.change', function(event, indexs){
+    console.log(indexs);
+  });
 
-  
+  $search.on('keypress', function(event){
+    if (event.keyCode === 13) {
+      $t.load({search: $search.val(), id: $select.val()});
+    }
+  });
+  $select.on('change', function() {
+    $t.load({search: $search.val(), id: $select.val()});
+  });
+
+  var _data = {
+    "count": 3,
+    "data": [
+      {
+        "name": "Lily",
+        "height": 170,
+        "weight": 57,
+        "age": 30
+      }, {
+        "name": "Tom",
+        "height": 180,
+        "weight": 58,
+        "age": 27
+      }, {
+        "name": "Jerry",
+        "height": 150,
+        "weight": 50,
+        "age": 15
+      }
+    ]
+  }
+  $data.val(JSON.stringify(_data));
+  $btn.on('click', function(){
+    $t.loadData(JSON.parse($data.val()));
+  });
+  $data1.val(JSON.stringify(_data.data));
+  $btn1.on('click', function(){
+    $t.addData(JSON.parse($data.val()));
+  });
+});
+</script>
 </body>
 </html>

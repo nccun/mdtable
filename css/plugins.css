@@ -1,0 +1,122 @@
+/** table */
+.md-table-wrap table .checkbox-primary, .md-table-wrap table thead th, .md-table-wrap .pagination li {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -khtml-user-select: none;
+    user-select: none;
+}
+.md-table-wrap table thead tr th {
+    border-bottom: 1px solid #ddd;
+}
+.md-table-wrap table thead .sorting,
+.md-table-wrap table thead .sorting_asc,
+.md-table-wrap table thead .sorting_desc,
+.md-table-wrap table thead .sorting_asc_disabled,
+.md-table-wrap table thead .sorting_desc_disabled {
+    background: none;
+    cursor: pointer;
+}
+.md-table-wrap table thead .sorting_asc:after {
+    content: "\f0de";
+    float: right;
+    font-family: fontawesome;
+    color: #666;
+}
+.md-table-wrap table thead .sorting_desc:after {
+    content: "\f0dd";
+    float: right;
+    font-family: fontawesome;
+    color: #666;
+}
+.md-table-wrap table thead .sorting:after {
+    content: "\f0dc";
+    float: right;
+    font-family: fontawesome;
+    color: #aaa;
+}
+.md-table-wrap .pagination {
+    margin-top: 15px;
+}
+
+.md-table-wrap .pagination li a {
+    color: #222;
+    background: none;
+    border: none;
+    cursor: default;
+    font-size: 16px;
+}
+
+.md-table-wrap .pagination li a.disabled {
+    color: #aaa;
+}
+
+.md-table-wrap .pagination li a:hover {
+    color: #12b5b1;
+    cursor: pointer;
+}
+
+.md-table-wrap .pagination li a.active {
+    background: none;
+    color: #12b5b1;
+    cursor: default;
+}
+
+.md-table-wrap .pagination li a.disabled:hover {
+    color: #888;
+    cursor: default;
+}
+.table-hover tbody tr:hover {
+    background-color: #f8f6f0;
+}
+.md-table-wrap .table {
+    table-layout:fixed;
+}
+table .limit-text {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.md-table-wrap .table tr th,.md-table-wrap .table tr td {
+    color: #666;
+}
+/** table */
+
+/** custom checkbox 自定义多选框 */
+label.checkbox-primary, label.checkbox-primary:hover, label.checkbox-primary.checked {
+    content: '';
+    display: block;
+    background-image: url('../images/spirits.png');
+    width: 20px;
+    height: 20px;
+    margin: 0 auto;
+}
+
+label.checkbox-primary {
+    background-position: 0px 0px;
+}
+
+label.checkbox-primary:hover {
+    background-position: -20px 0px;
+}
+
+label.checkbox-primary.checked {
+    background-position: -40px 0px;
+}
+/** custom checkbox 自定义多选框 */
+
+/** loading */
+.md-mask {
+    position: absolute;
+    z-index: 3000;
+}
+
+.md-mask .md-loading {
+    width: 60px;
+    height: 24px;
+    line-height: 24px;
+    margin: 0 auto;
+    color: #fff;
+    text-align: center;
+}
+/** loading */
