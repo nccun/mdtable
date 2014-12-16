@@ -37,6 +37,14 @@
       <button class="btn btn-success" style="width: 100%;margin-top: 85px;">改变数据</button>
     </div>
   </div>
+  <div class="data1 row">
+    <div class="col-lg-9">
+      <textarea class="form-control" style="height: 200px;resize: none;"></textarea>
+    </div>
+    <div class="col-lg-3">
+      <button class="btn btn-success" style="width: 100%;margin-top: 85px;">添加数据</button>
+    </div>
+  </div>
 </div>
 <script src="http://cdn.staticfile.org/jquery/1.9.1/jquery.js"></script>
 <script src="js/plugins.js"></script>
@@ -45,7 +53,9 @@ $(function(){
   var $select = $('.filter select'),
     $search = $('.filter input'),
     $data = $('.data textarea'),
-    $btn = $('.data .btn');
+    $btn = $('.data .btn'),
+    $data1 = $('.data1 textarea'),
+    $btn1 = $('.data1 .btn');
   $t = $('table').mdtable({
     url: 'data/data.json',
     extra: {id: $select.val()},
@@ -94,7 +104,6 @@ $(function(){
     console.log(indexs);
   });
 
-
   $search.on('keypress', function(event){
     if (event.keyCode === 13) {
       $t.load({search: $search.val(), id: $select.val()});
@@ -128,6 +137,10 @@ $(function(){
   $data.val(JSON.stringify(_data));
   $btn.on('click', function(){
     $t.loadData(JSON.parse($data.val()));
+  });
+  $data1.val(JSON.stringify(_data.data));
+  $btn1.on('click', function(){
+    $t.addData(JSON.parse($data.val()));
   });
 });
 </script>

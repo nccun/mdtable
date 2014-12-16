@@ -21,6 +21,12 @@
         + option.paging.nextText + '</a></li><li class="last hidden"><a class="disabled" data-page="l">' + option.paging.lastText + '</a></li></ul></nav>'
     };
 
+    // table datas
+    // 表格中的数据
+    var _data = {};
+    // get data mode: local or remote
+    // 数据请求模式，分本地和远程
+    var _mode = '';
     // ajax data
     // 其余查询条件
     var _extra = option.extra;
@@ -223,11 +229,14 @@
         url: (extra && extra.url)?extra.url:option.url,
         data: data,
         target: tableWrap,
+        loading: option.loading,
         cache: option.cache?option.cache:false,
         success: function(data) {
-          loadData(data);
+          _data = data;
+          loadData();
         },
         error: function(xhr, status){
+          _data = {};
           if (status === 'timeout') {
             tb.empty().append(template.timeout);
           } else {
@@ -244,7 +253,8 @@
      * @param data 格式:{count:xx,data:[{},{},...]}
      * @param data like:{count:xx,data:[{},{},...]}
      */
-    var loadData = function(data) {
+    var loadData = function() {
+      var data = _data;
       if (data.data) {
         // clear table
         // 先清空table内容
@@ -348,7 +358,21 @@
     // load data with the giving data
     this.loadData = function(data) {
       start = 0;
-      loadData(data);
+      _data = data;
+      loadData();
+    }
+    // public method addData with a parameter 'data'
+    // add datas to the current table
+    this.addData = function(datas) {
+      for (var i = 0; i < datas.length; i++) {
+        _data.data.push(datas[i]);
+      }
+      _data.count += datas.length;
+      loadData();
+    }
+    // public method getDatas, return the datas in the table
+    this.getDatas = function() {
+      return _data.data;
     }
     return table;
   };
@@ -367,6 +391,9 @@
       error: '数据请求出错',
       timeout: '请求超时'
     },
+    // 是否显示loading图
+    // to show the loading img or not
+    loading: 'show',
     // ajax cache
     // ajax缓存
     cache: false,
@@ -408,17 +435,20 @@
     load: function(option) {
       option = $.extend({}, $.loadDefaults, option);
       var target = $(option.target);
-      option.beforeSend = function() {
-        target.loading('show');
-      };
-      option.complete = function() {
-        target.loading('hide');
-      };
+      if (option.loading != 'hide') {
+        option.beforeSend = function() {
+          target.loading('show');
+        };
+        option.complete = function() {
+          target.loading('hide');
+        };
+      }
       $.ajax(option);
     },
     loadDefaults: {
       type: 'get',
-      timeout: 6000,
+      loading: 'show',
+      timeout: 10000,
       target: window
     }
   });
