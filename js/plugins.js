@@ -1,4 +1,5 @@
 (function($){
+  'use strict';
   /**
    * custom table width sorting and pagination
    * 自定义表格， 支持排序、分页
@@ -16,17 +17,14 @@
       error: '<tr><td class="mdtable-error" colspan="' + (option.columns.length + (option.multicheck?1:0)) +'">'+ option.message.error + '</td></tr>',
       empty: '<tr><td class="mdtable-empty" colspan="' + (option.columns.length + (option.multicheck?1:0)) +'">'+ option.message.empty + '</td></tr>',
       timeout: '<tr><td class="mdtable-timeout" colspan="' + (option.columns.length + (option.multicheck?1:0)) +'">'+ option.message.timeout + '</td></tr>',
-      paging: '<nav class="pull-right"><ul class="pagination"><li class="first hidden"><a class="disabled" data-page="f">' + option.paging.firstText 
-        + '</a></li><li class="pre"><a class="disabled" data-page="p">' + option.paging.preText + '</a></li><li class="page"><a data-page="1">1</a></li><li class="next"><a class="disabled" data-page="n">' 
-        + option.paging.nextText + '</a></li><li class="last hidden"><a class="disabled" data-page="l">' + option.paging.lastText + '</a></li></ul></nav>'
+      paging: '<nav class="pull-right"><ul class="pagination"><li class="first hidden"><a class="disabled" data-page="f">' + option.paging.firstText +
+        '</a></li><li class="pre"><a class="disabled" data-page="p">' + option.paging.preText + '</a></li><li class="page"><a data-page="1">1</a></li><li class="next"><a class="disabled" data-page="n">' +
+        option.paging.nextText + '</a></li><li class="last hidden"><a class="disabled" data-page="l">' + option.paging.lastText + '</a></li></ul></nav>'
     };
 
     // table datas
     // 表格中的数据
-    var _data = {};
-    // get data mode: local or remote
-    // 数据请求模式，分本地和远程
-    var _mode = '';
+    var _data = {count:0,data:[]};
     // ajax data
     // 其余查询条件
     var _extra = option.extra;
@@ -66,22 +64,19 @@
           }
           _sortingCol = i;
           _onlySortable = true;
-          if (col.sort.rule) {
-            thCol.data('rule', col.sort.rule);
-          }
         } else {
           thCol.addClass('sorting');
         }
         thCol.on('click', function(){
           var $this = $(this),
-            $index = th.find('th:not(.check)').index($this),
-            $rule = $this.data('rule');
+            $index = th.find('th:not(.check)').index($this);
+          _sortingCol = $index;
           if ($this.hasClass('sorting_desc')) {
-            doSort($index, 'asc', $rule);
             $this.removeClass('sorting_desc').addClass('sorting_asc');
+            doSort($index, 'asc');
           } else {
-            doSort($index, 'desc', $rule);
             $this.removeClass('sorting sorting_asc').addClass('sorting_desc');
+            doSort($index, 'desc');
           }
           $this.siblings().filter('.sorting,.sorting_asc,.sorting_desc').removeClass('sorting_asc sorting_desc').addClass('sorting');
         });
@@ -131,11 +126,11 @@
       // remove all checkboxs' 'checked' class
       // 取消所有的选择按钮的选中状态
       table.find('.checkbox-primary').removeClass('checked');
-    })
+    });
     // paginations' click event(not disabled and not current page)
     // 分页组件(非禁用、非当前按钮)的点击事件
     pagDom.delegate('li a:not(.disabled,.active)', 'click', function(){
-      var $this = $(this), $parent = $this.parent(), targetPage = $this.data('page');
+      var $this = $(this), targetPage = $this.data('page');
       if (targetPage === 'f') {
         start = 0; pre_current = 0;
       } else if (targetPage === 'p') {
@@ -148,7 +143,12 @@
         targetPage = parseInt(targetPage);
         start = (targetPage - 1) * limit; pre_current = targetPage;
       }
-      load(_extra);
+      if (option.mode === 'remote') {
+        load(_extra);
+      } else if (option.mode === 'local') {
+        loadData();
+      }
+
     });
     // checkbox
     // 多选框按钮
@@ -195,32 +195,90 @@
      * 排序方法
      * sort function
      * @param col 排序的列
-     * @param col column index to sort
+     *            column index to sort
      * @param order 排序的顺序，默认升序
-     * @param order the order to sort, default is 'asc'
-     * @param rule 排序规则，默认按本地语言文字的排序方法排序
-     * @param rule sort rule, default is 'localeCompare'
+     *              the order to sort, default is 'asc'
      */
-    var doSort = function(col, order , rule) {
-      if (col != 0 && !col) return;
-      if (rule = null) {rule = order;order = null};
-      if (!order) order = 'asc';
-      // 不能执行tb.empty()清空，否则dom上的事件不能保存
-      tb.append(tb.children().sort(function(a, b){
-        a = $(a).find('td:not(.check)').eq(col), b = $(b).find('td:not(.check)').eq(col);
-        if (rule && typeof  rule === 'function') {
-          return rule(a, b) * (order === 'desc'?-1:1);
-        } else {
-          return a.text().localeCompare(b.text()) * (order === 'desc'?-1:1);
+    var doSort = function(sortCol, order) {
+      // clear table
+      // 先清空table内容
+      tb.empty();
+      var data = _data.data;
+      if (data.length) {
+        // prevent that data.length gt limit
+        // 防止返回数据条数大于每页显示数
+        if (option.mode !== 'local' && data.length > limit) {
+          data.length = limit;
         }
-      }));
+        if (!sortCol) {
+          sortCol = _sortingCol;
+        }
+        if (sortCol !== -1) {
+          var column = option.columns[sortCol];
+          if (th.find('th:not(.check)').eq(sortCol).hasClass('sorting_desc')) {
+            order = 'desc';
+          } else {
+            order = 'asc';
+          }
+          data.sort(function(a, b){
+            var da = a[column.row],
+              db = b[column.row];
+            if (column.rule && typeof  column.rule === 'function') {
+              return column.rule(a, b) * (order === 'desc'?-1:1);
+            } else {
+              return da.toString().localeCompare(db.toString()) * (order === 'desc'?-1:1);
+            }
+          });
+          if (option.mode === 'local') {
+            data = data.slice((pre_current - 1) * limit, pre_current * limit);
+          }
+        }
+        // insert datas
+        // 循环插入数据
+        for(var j = 0; j < data.length; j++) {
+          var tr = $('<tr></tr>').addClass(j % 2 === 0 ? 'odd': 'even');
+          // insert checkbox
+          // 插入多选框
+          if (option.multicheck.enable) {
+            tr.append(template.checkbox.td);
+          }
+          // insert columns
+          // 循环插入列值
+          for(var k = 0; k < option.columns.length; k++) {
+            var col = option.columns[k];
+            var v = data[j][col.row];
+            // column renderer
+            // 列渲染
+            if (col.renderer && typeof col.renderer === 'function') {
+              v = col.renderer(v, data[j], data);
+            }
+            if (!(v instanceof $)) {
+              v = $('<td' + (col.class?(' class="' + col.class + '"'):'') + '>'+ v + '</td>');
+            } else {
+              v.wrap('<td' + (col.class?(' class="' + col.class + '"'):'') + '></td>');
+              v = v.parent();
+            }
+            tr.append(v);
+          }
+          // tr row renderer
+          // tr行渲染
+          if (option.trRenderer) {
+            option.trRenderer(tr);
+          }
+          // set tr's data['row'] with it's data
+          tr.data('row', data[j]);
+          tb.append(tr);
+        }
+      } else {
+        tb.empty().append(template.empty);
+      }
     };
 
     /**
      * 请求资源
      * ajax load data
      * @param extra 请求时发送的数据
-     * @param extra ajax data parameter
+     *              ajax data parameter
      */
     var load = function(extra) {
       var data = $.extend({}, extra, {start:start, limit: limit});
@@ -245,20 +303,25 @@
           table.trigger('load.error');
         }
       });
-    }
+    };
 
     /**
      * 让表格加载数据
      * renderer the data to the table
      * @param data 格式:{count:xx,data:[{},{},...]}
-     * @param data like:{count:xx,data:[{},{},...]}
+     *             like:{count:xx,data:[{},{},...]}
      */
     var loadData = function() {
-      var data = _data;
+      var data = null;
+      if (option.mode === 'local') {
+        data = {
+          count: _data.data.length,
+          data: _data.data.slice((pre_current-1)*limit,pre_current*limit)
+        };
+      } else if (option.mode === 'remote') {
+        data = _data;
+      }
       if (data.data) {
-        // clear table
-        // 先清空table内容
-        tb.empty();
         // when data.count gt limit then the pagination shows
         // 数据数量大于一页总数时分页
         if (data.count > limit) {
@@ -276,104 +339,65 @@
           }
           table.trigger('page.change');
         } else {
-          pagDom.hide()
+          pagDom.hide();
         }
-        data = data.data;
-        if (data.length) {
-          if (data.length > limit) {
-            // prevent that data.length gt limit
-            // 防止返回数据条数大于每页显示数
-            data.length = limit;
-          }
-          // insert datas
-          // 循环插入数据
-          for(var i = 0; i < data.length; i++) {
-            var tr = $('<tr></tr>').addClass(i % 2 == 0 ? 'odd': 'even');
-            // insert checkbox
-            // 插入多选框
-            if (option.multicheck.enable) {
-              tr.append(template.checkbox.td);
-            }
-            // insert columns
-            // 循环插入列值
-            for(var j = 0; j < option.columns.length; j++) {
-              var col = option.columns[j];
-              var v = data[i][col.row];
-              // column renderer
-              // 列渲染
-              if (col.renderer && typeof col.renderer === 'function') {
-                v = col.renderer(v, data[i], data);
-              }
-              if (!(v instanceof $)) {
-                v = $('<td' + (col.class?(' class="' + col.class + '"'):'') + '>'+ v + '</td>');
-              } else {
-                v.wrap('<td' + (col.class?(' class="' + col.class + '"'):'') + '></td>');
-                v = v.parent();
-              }
-              tr.append(v);
-            }
-            // tr row renderer
-            // tr行渲染
-            if (option.trRenderer) {
-              option.trRenderer(tr);
-            }
-            // set tr's data['row'] with it's data
-            tr.data('row', data[i]);
-            tb.append(tr);
-          }
-          if (_sortingCol != -1) {
-            var $c = th.find('th').eq(_sortingCol),
-              _order = null;
-            if ($c.hasClass('sorting_desc')) {
-              _order = 'desc';
-            } else {
-              _order = 'asc';
-            }
-            doSort(_sortingCol, _order, $c.data('rule'));
-          }
-        } else {
-          tb.empty().append(template.empty);
-        }
+        doSort(null);
       } else {
         tb.empty().append(template.error);
       }
       table.trigger('load.ok');
-    }
+    };
 
     // load data for the first time
     // 首次请求数据
-    if (option.url) {
+    if (option.mode === 'remote') {
       load(option.extra);
-    } else if (option.data) {
+    } else if (option.mode === 'local') {
       loadData(option.data);
     }
     // public method load with a parameter 'extra',
     // load data with ajax and the extra parameter
     // 添加额外数据进行查询，查询条件添加到ajax请求中
     this.load = function(extra) {
+      if (option.mode === 'local') {
+        throw new Error('current is local mode.');
+      }
       start = 0;
       load(extra);
     };
     //public method loadData with a parameter 'data'
     // load data with the giving data
     this.loadData = function(data) {
+      if (option.mode === 'remote') {
+        throw new Error('current is local mode.');
+      }
       start = 0;
       _data = data;
       loadData();
-    }
+    };
     // public method addData with a parameter 'data'
     // add datas to the current table
     this.addData = function(datas) {
-      for (var i = 0; i < datas.length; i++) {
-        _data.data.push(datas[i]);
+      if (option.mode === 'remote') {
+        throw new Error('current is local mode.');
       }
-      _data.count += datas.length;
+      Array.prototype.push.apply(_data.data, datas);
       loadData();
-    }
+    };
     // public method getDatas, return the datas in the table
     this.getDatas = function() {
       return _data.data;
-    }
+    };
+    // public method returns the selected rows(start with 0)
+    this.getSelection = function() {
+      var checkboxes = tb.find('.checkbox-primary'),
+        checked = checkboxes.filter('.checked');
+      var r = [];
+      $.each(checked, function(i, c){
+        r.push(checkboxes.index($(c)));
+      });
+      return r;
+    };
     return table;
   };
   /**
@@ -394,6 +418,9 @@
     // 是否显示loading图
     // to show the loading img or not
     loading: 'show',
+    // 数据请求模式：本地和远程
+    // data request mode: local or remote
+    mode: 'remote',
     // ajax cache
     // ajax缓存
     cache: false,
@@ -435,7 +462,7 @@
     load: function(option) {
       option = $.extend({}, $.loadDefaults, option);
       var target = $(option.target);
-      if (option.loading != 'hide') {
+      if (option.loading !== 'hide') {
         option.beforeSend = function() {
           target.loading('show');
         };
@@ -461,22 +488,22 @@
     this.on('click', function(){
       $(this).toggleClass('checked');
     });
-  }
+  };
 
   /**
    * custom loading method, parameter is 'show' or 'hide'
    * loading,参数show|hide
    */
   $.fn.loading = function(option) {
-  	option = option||'show';
-  	var mask = $('.md-mask').eq(parseInt(this.attr('data-loading') - 1));
-  	if (mask.length == 0) {
-  	  mask = $('<div class="md-mask"><div class="md-loading"><img src="images/loading.gif" alt="loading"/></div></div>');
-  	  $('body').append(mask);
-  	  this.attr('data-loading', $('.md-mask').length);
-  	}
-  	if (option === 'show') {
-  	  mask.show();
+    option = option||'show';
+    var mask = $('.md-mask').eq(parseInt(this.attr('data-loading') - 1));
+    if (mask.length === 0) {
+      mask = $('<div class="md-mask"><div class="md-loading"><img src="images/loading.gif" alt="loading"/></div></div>');
+      $('body').append(mask);
+      this.attr('data-loading', $('.md-mask').length);
+    }
+    if (option === 'show') {
+       mask.show();
       var load = mask.find('.md-loading');
       var h = this.outerHeight(),
         w = this.outerWidth(),
@@ -492,10 +519,10 @@
       }
       load.css('margin-top', (mask.height() - load.height()) / 2);
       return this;
-  	} else if (option === 'hide') {
-  	  mask.hide();
-  	  return this;
-  	}
+    } else if (option === 'hide') {
+      mask.hide();
+      return this;
+    }
   };
 
 })(jQuery);
