@@ -101,6 +101,7 @@ $(function(){
     $btn1 = $('#local .data1 .btn');
   $t1 = $('#remote table').mdtable({
     url: 'data/data.json',
+    loading: 'hide',
     extra: {id: $select.val()},
     multicheck: {enable: true},
     columns: [
