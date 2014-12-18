@@ -1,4 +1,3 @@
-[x]
 #mdtable
 =======
 
@@ -89,7 +88,7 @@ columns: [
 - page.change
 
 
-##[Englise version]
+##Englise version
 
 Custom table in our project, it support remote and local method to get data. [Demo Here](http://nccun.github.io/mdtable/)
 *If there's any translation problom, please contact me [mailto:erguotou525@gmail.com](mailto:erguotou525@gmail.com)*
