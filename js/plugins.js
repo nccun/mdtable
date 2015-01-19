@@ -67,21 +67,22 @@
         } else {
           thCol.addClass('sorting');
         }
-        thCol.on('click', function(){
-          var $this = $(this),
-            $index = th.find('th:not(.check)').index($this);
-          _sortingCol = $index;
-          if ($this.hasClass('sorting_desc')) {
-            $this.removeClass('sorting_desc').addClass('sorting_asc');
-            doSort($index, 'asc');
-          } else {
-            $this.removeClass('sorting sorting_asc').addClass('sorting_desc');
-            doSort($index, 'desc');
-          }
-          $this.siblings().filter('.sorting,.sorting_asc,.sorting_desc').removeClass('sorting_asc sorting_desc').addClass('sorting');
-        });
       }
     }
+    th.on('click', 'th:not(.check),tr:not(.check)', function() {
+      var $this = $(this),
+        $index = th.find('th:not(.check)').index($this);
+      _sortingCol = $index;
+      if ($this.hasClass('sorting_desc')) {
+        $this.removeClass('sorting_desc').addClass('sorting_asc');
+        doSort($index, 'asc');
+      } else {
+        $this.removeClass('sorting sorting_asc').addClass('sorting_desc');
+        doSort($index, 'desc');
+      }
+      $this.siblings().filter('.sorting,.sorting_asc,.sorting_desc').removeClass('sorting_asc sorting_desc').addClass('sorting');
+    });
+
     // handler load.ok and load.error event
     // 数据加载完成
     table.on('load.ok', function() {
@@ -369,7 +370,7 @@
     // load data with the giving data
     this.loadData = function(data) {
       if (option.mode === 'remote') {
-        throw new Error('current is local mode.');
+        throw new Error('current is remote mode.');
       }
       start = 0;
       _data = data;
@@ -379,9 +380,29 @@
     // add datas to the current table
     this.addData = function(datas) {
       if (option.mode === 'remote') {
-        throw new Error('current is local mode.');
+        throw new Error('current is remote mode.');
       }
       Array.prototype.push.apply(_data.data, datas);
+      loadData();
+    };
+    // remove all datas
+    // 删除所有数据
+    this.removeDatas = function() {
+      _data.data = [];
+      th.find('.check .checkbox-primary').removeClass('checked');
+      loadData();
+    };
+    // remove selected datas
+    // 删除选中的行
+    this.removeSelectedDatas = function() {
+      var checkboxes = tb.find('.checkbox-primary'),
+        checked = checkboxes.filter('.checked');
+      for (var i = checked.length - 1; i >= 0; i--) {
+        _data.data.splice(checkboxes.index($(checked[i])), 1);
+      }
+      if (_data.data.length === 0) {
+        th.find('.check .checkbox-primary').removeClass('checked');
+      }
       loadData();
     };
     // public method getDatas, return the datas in the table
