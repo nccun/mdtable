@@ -1,7 +1,7 @@
 (function($){
   'use strict';
   /**
-   * custom table width sorting and pagination
+   * custom table with sorting and pagination
    * 自定义表格， 支持排序、分页
    */
   $.fn.mdtable = function(option) {
